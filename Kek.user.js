@@ -280,27 +280,28 @@ function nextGetFromNum(num, size) {
 }
 
 function nextGet(size, callback) {
+    size = parseInt(size);
     var queue = new TimedQueue(1000);
     var closest = [null, null]; //board, post no
     boardState.getBoardNames(function(names) {
         names.forEach(function(name) {
             queue.add(function() {
                 boardState.getPage(name, 0, function(jsonObj) {
-                    var highest = 0;
+                    var newestPostNo = 0;
                     jsonObj.threads.forEach(function(thread) {
                         thread.posts.forEach(function(post) {
-                            highest = Math.max(highest, post.no)
+                            newestPostNo = Math.max(newestPostNo, post.no)
                         });
                     });
                     if (closest[0] === null) {
-                        closest = [name, highest];
+                        closest = [name, newestPostNo];
                     } else {
-                        closestGet = nextGetFromNum(closest[1], size);
-                        nextGet = nextGetFromNum(highest, size);
-			//GM_log("highest: " + highest + "," + nextGet);
-			//GM_log("closest: " + closest + ", "+closestGet);
-                        if (closest[1] === null || nextGet - highest < closestGet - closest[1]) {
-                            closest = [name, highest];
+                        var closestGet = nextGetFromNum(closest[1], size);
+                        var threadClosestGet = nextGetFromNum(newestPostNo, size);
+			var threadDistance = threadClosestGet - newestPostNo;
+			var closestDistance = closestGet - closest[1];
+                        if (closest[1] === null || threadDistance < closestDistance) {
+                            closest = [name, newestPostNo];
                         }
                     }
                 });
@@ -310,10 +311,10 @@ function nextGet(size, callback) {
             if (closest[0] === null) {
                 unsafeWindow.API.sendChat("Error: Something blew up getting posts for nextGet");
             } else {
+                var nextget = nextGetFromNum(closest[1], size);
+                var distance = nextget - closest[1];
                 unsafeWindow.API.sendChat(
-                    "The next size " + size.toString() + " get is /" + closest[0] + 
-                    "/'s " + nextGetFromNum(closest[1], size).toString() +
-                    " GET. Right now it's at at " + closest[1].toString()
+                    " /" + closest[0] + "/ is " + distance.toString() + " posts away from its " + nextget.toString() + " GET"
                 );
             }
             callback();
@@ -350,7 +351,6 @@ snakectr = 0;
 // 
 function parseCmds(data) {
     var re = /^%\w+(?=(\s.*)|$)/;
-    var parts;
     if (re.test(data.message)) {
         if (data.from == 'Captain_Lel') {
             switch(snakectr++%3) {
@@ -359,9 +359,9 @@ function parseCmds(data) {
                 case 2: unsafeWindow.API.sendChat("That's us. And we RULE RULE RULE"); break;
             }
         }
-        parts = data.message.split(" ");
-        cmd = parts[0].toLowerCase();
-        args = parts.slice(1);
+        var parts = data.message.split(" ");
+        var cmd = parts[0].toLowerCase();
+        var args = parts.slice(1);
 
         switch(cmd) {
 
@@ -430,8 +430,8 @@ function parseCmds(data) {
                 var intRegex = /^\d+$/;
                 if (intRegex.test(args[0])) {
                     blockCall(function(unblock) {
-                        unsafeWindow.API.sendChat("finding the next length " + args[0].toString() + " get");
-                        nextGet(args[0], unblock);
+                        unsafeWindow.API.sendChat("Finding the next length " + args[0].toString() + " get");
+                        nextGet(parseInt(args[0]), unblock);
                     })
                 } else {
                     unsafeWindow.API.sendChat("nice number bruver");
