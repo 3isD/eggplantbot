@@ -257,15 +257,26 @@ function greatestGets(boardName, callback) {
     });
 }
 
-function nextGetFromNum(num, sizeOfGet) {
-    numstr = num.toString();
-    var repeatDigit = numstr.toString()[numstr.length-sizeOfGet];
-    if (Array(sizeOfGet+1).join(repeatDigit) < numstr.slice(numstr.length - sizeOfGet, numstr.length)) {
-        repeatDigit = (parseInt(repeatDigit) + 1).toString();
+function nextGetFromNum(num, size) {
+    var numstr = num.toString();
+
+    // lead num with 0s if needed
+    var sizeDifference = size - numstr.length;
+    if (sizeDifference > 0) {
+        numstr = Array(sizeDifference+1).join('0') + numstr;
     }
-    var theGetStr = numstr.toString().slice(0,numstr.length-sizeOfGet) + Array(sizeOfGet+1).join(repeatDigit);
-    var theGetNum = parseInt(theGetStr);
-    return theGetNum;
+    
+    // cut the string in half and hack on the repeating nums
+    var left = numstr.slice(0, numstr.length - size);
+    var right = numstr.slice(numstr.length - size, numstr.length);
+
+    var repeatDigit = right[0];
+    var repeatString = Array(size+1).join(repeatDigit);
+    if (parseInt(right) >= parseInt(repeatString)) {
+        repeatDigit = (parseInt(repeatDigit) + 1).toString()
+        repeatString = Array(size+1).join(repeatDigit);
+    }
+    return parseInt(left + repeatString);
 }
 
 function nextGet(size, callback) {
@@ -286,6 +297,8 @@ function nextGet(size, callback) {
                     } else {
                         closestGet = nextGetFromNum(closest[1], size);
                         nextGet = nextGetFromNum(highest, size);
+			//GM_log("highest: " + highest + "," + nextGet);
+			//GM_log("closest: " + closest + ", "+closestGet);
                         if (closest[1] === null || nextGet - highest < closestGet - closest[1]) {
                             closest = [name, highest];
                         }
@@ -299,8 +312,8 @@ function nextGet(size, callback) {
             } else {
                 unsafeWindow.API.sendChat(
                     "The next size " + size.toString() + " get is /" + closest[0] + 
-                    "/'s" + nextGetFromNum(closest[1]).toString() +
-                    "GET. Right now it's at at " + closest[1].toString()
+                    "/'s " + nextGetFromNum(closest[1], size).toString() +
+                    " GET. Right now it's at at " + closest[1].toString()
                 );
             }
             callback();
