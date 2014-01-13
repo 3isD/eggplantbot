@@ -60,7 +60,7 @@ PongGame.prototype = {
 		this.player2pos = this.player1pos;
 		this.ballpos = [Math.floor(this.boardWidth/2), Math.floor(this.boardHeight/2)]
 		this.ballvel = [[0, 1], [0,-1]][Math.floor(Math.random()*2)];
-		this.counter = 3;
+		this.counter = 5;
 		this.stage = 1;
 		return this.toLines(this.getBoard());
 	},
