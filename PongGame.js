@@ -86,7 +86,7 @@ PongGame.prototype = {
 		var px = Math.floor(this.boardWidth/2) - 2;
 		var py = Math.floor(this.boardHeight/2) - 2;
 
-		board = [];
+		var board = [];
 		for (var y=0;y<this.boardHeight; y++) {
 			board[y] = [];
 			for (var x=0; x<this.boardWidth; x++) {

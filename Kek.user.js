@@ -8,7 +8,7 @@
 // @version     1.00
 // @grant       GM_xmlhttpRequest
 // @grant       GM_log
-alert("Greasemonkey script started.");
+GM_log("Greasemonkey script started.");
 
 // return the json object or null
 function getJSON(theurl, callback) {
@@ -453,7 +453,7 @@ function parseCmds(data) {
                 if (args.length > 0) { 
                     max = args[0];
                 }
-                num = Math.floor((Math.random()*max) + 1);
+                var num = Math.floor((Math.random()*max) + 1);
                 unsafeWindow.API.sendChat("You rolled: " + num.toString() + " on a " + max.toString() + " sided die.");
             }
             break;
@@ -472,11 +472,13 @@ function parseCmds(data) {
             break;
         
         case '%pong':
+	    unsafeWindow.API.sendChat(":eggplant: :lelennyface:");
+	    break;
             if (args.length == 0) {
                 unsafeWindow.API.sendChat("But against who...");
             } else {
-                player1ID = data.fromID;
-                player2ID = null;
+                var player1ID = data.fromID;
+                var player2ID = null;
                 unsafeWindow.API.getUsers().forEach(function(user) {
                     if (args.join(' ').toLowerCase() === user.username.toLowerCase() || args.join(' ').toLowerCase() === '@'+user.username.toLowerCase()) {
                         player2ID = user.id;
@@ -487,7 +489,7 @@ function parseCmds(data) {
                         if (accepted && !ponging) {
                             ponging = true;
                             pongGame.reset();
-                            playPong(function() {
+                            playPong(player1ID, player2ID, function() {
                                 ponging = false;
                             });
                         }
@@ -532,14 +534,14 @@ function parseCmds(data) {
 
 // callback takes 
 function waitForAccept(player1ID, player2ID, callback) {
-    player1name = unsafeWindow.API.getUser(player1ID).username;
-    player2name = unsafeWindow.API.getUser(player2ID).username;
+    var player1name = unsafeWindow.API.getUser(player1ID).username;
+    var player2name = unsafeWindow.API.getUser(player2ID).username;
     var msg = "@" + player2name + ": " + player1name + " has challenged you to pong! Woot is left, Meh is right. " + player1name + " is bottom. Type accept to play."
     unsafeWindow.API.sendChat(msg);
 
     var success = false;
     function parseAcceptMessage(data) {
-        if (data.fromID = player2ID && data.message === 'accept') {
+        if (data.fromID === player2ID && data.message === 'accept') {
             unsafeWindow.API.sendChat("Challenge accepted, wew");
             success = true;
             callback(true);
@@ -558,9 +560,7 @@ function waitForAccept(player1ID, player2ID, callback) {
 
 var pongGame = new PongGame(7);
 var ponging = false;
-var player1ID;
-var player2ID;
-function playPong(callback) {
+function playPong(player1ID, player2ID, callback) {
     // theuser.vote: -1 is meh, 0 is none, 1 is woot. these are the controls.
     var player1 = unsafeWindow.API.getUser(player1ID);
     var player2 = unsafeWindow.API.getUser(player2ID);
@@ -575,7 +575,7 @@ function playPong(callback) {
             unsafeWindow.API.sendChat(line);
         });
         if (!(pongGame.isAsleep())) {
-            setTimeout(playPong, 500);
+            setTimeout(function() {playPong(player1ID, player2ID, callback)}, 500);
         } else {
             winner = pongGame.checkWin();
             if (winner == 1) {
@@ -583,8 +583,6 @@ function playPong(callback) {
             } else if (winner == 2) {
                 unsafeWindow.API.sendChat(player2.username + " wins all the kek!");
             }
-            player1ID = null;
-            player2ID = null;
             callback();
         }
     }
@@ -601,6 +599,6 @@ window.addEventListener('load', function() { setTimeout(
         
     }, 8000) }, false)
 
-alert("Greasemonkey script reached end.");
+GM_log("Greasemonkey script reached end.");
 
 // ==/UserScript==
